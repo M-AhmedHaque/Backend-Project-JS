@@ -4,9 +4,6 @@ import { User } from "../models/user.model.js"
 import {uploadOnCloud} from "../utils/cloudinary.js"
 import {apiResponse} from "../utils/apiResponse.js"
 const registerUser= asyncHandle ( async (req,res) =>{
-    res.status(200).json({
-        message:"ok"
-    })
     //time to write proper logic haaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     const {fullname , username , email, password } = req.body
     console.log("name:",fullname)
@@ -19,14 +16,18 @@ const registerUser= asyncHandle ( async (req,res) =>{
     }// }else{
     //     console.log("name:",fullname)
     // }
-    const userExist = User.findOne({
+    const userExist = await User.findOne({
         $or:[{ username } , { email }]
     })
     if(userExist){
         throw new apiError(408,"Email or username already exists.")
     }
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length>0 ){
+        coverImageLocalPath=req.files.coverImage[0].path
+    }
+ 
     if(!avatarLocalPath){
         throw new apiError(400,"Cant get path of Avatar.")
     }
