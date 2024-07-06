@@ -6,16 +6,14 @@ import {apiResponse} from "../utils/apiResponse.js"
 
 const generateAccessAndRefreshToken = async (userId)=>{
     try{
-        const user = await User.findOne(userId)
+        const user = await User.findById(userId)
         const refreshToken = user.generateRefreshToken()
         const accessToken = user.generateAccessToken()
         user.refreshToken=refreshToken
-        user.save({
-            validateBeforeSave:false
-        })
+        await user.save({validateBeforeSave:false})
         return {refreshToken , accessToken}
     }catch(error){
-        throw new apiError(200,"Something went wrong with refresh and access token")
+        throw new apiError(200,"Something went wrong with refresh and access token while genearation")
     }
 }
 
@@ -86,6 +84,7 @@ const loginUser = asyncHandle ( async(req, res) =>{
     if(!passwordCorrect){
         throw new apiError(402,"Invalid password")
     }
+    //console.log(user._id)
     const {refreshToken , accessToken} = await generateAccessAndRefreshToken(user._id)
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
     const options={

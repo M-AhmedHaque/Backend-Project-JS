@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken"
 import {User} from "../models/user.model.js"
 export const verifyjwt = asyncHandle(async (req,res,next)=>{
     try {
-        token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ","")
+        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ","")
         if(!token){
             throw new apiError(500,"Uauthorized request.Problem with token")
         }
