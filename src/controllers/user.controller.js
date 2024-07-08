@@ -267,5 +267,7 @@ export {
     refreshAccessToken,
     changePassword,
     getUser,
-    updateUsernameAndEmail
+    updateUsernameAndEmail,
+    updateCoverImage,
+    updateAvatar
 }
