@@ -3,7 +3,7 @@ import { apiError } from "../utils/apiError.js"
 import { User } from "../models/user.model.js"
 import {uploadOnCloud} from "../utils/cloudinary.js"
 import {apiResponse} from "../utils/apiResponse.js"
-import { JsonWebTokenError } from "jsonwebtoken"
+//import { jwt } from "jsonwebtoken"
 import jwt from "jsonwebtoken"
 
 const generateAccessAndRefreshToken = async (userId)=>{
@@ -260,6 +260,72 @@ const updateCoverImage = asyncHandle(async (req,res)=>{
     
 })
 
+const userProfile = asyncHandle(async (req,res)=>{
+    const {username} = req.params
+    if(!username?.trim()){
+        return new apiError(400,"Cannot get username")
+    }
+    const channel = await User.aggregate(
+        {
+            $match:{
+                username:username?.toLowerCase()
+            }
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",
+                foreignFeild:"channel",
+                to:"subscribers"
+            }
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"subscriber",
+                to:"subscribed"
+            }
+        },
+        {
+            $addFeilds:{
+                subscribersCount:{
+                    $size:"$subscribers"
+                },
+                subscribedCount:{
+                    $size:"$subscribed"
+                },
+                isSubscribedByUser:{
+                    if:{ $in:[ req.user.username , "$subscribers.subscriber" ]},
+                    then:true,
+                    else:false
+                }
+
+            }
+        },
+        {
+            $project:{
+                username:1,
+                fullname:1,
+                email:1,
+                subscribersCount:1,
+                subscribedCount:1,
+                isSubscribedByUser:1,
+                avatar:1,
+                coverImage:1       
+            }
+        }
+    )
+    if(!channel?.length){
+        throw new apiError(404,"Channel doesnot exist")
+    }
+    return res
+    .status(200)
+    .json(
+        new apiResponse(200,channel[0],"Profile information returned")
+    )
+})
+
 export {
     registerUser,
     loginUser,
@@ -269,5 +335,6 @@ export {
     getUser,
     updateUsernameAndEmail,
     updateCoverImage,
-    updateAvatar
+    updateAvatar,
+    userProfile
 }
