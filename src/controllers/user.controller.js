@@ -326,6 +326,56 @@ const userProfile = asyncHandle(async (req,res)=>{
     )
 })
 
+const getUserWatchHistory = asyncHandle(async (req,res)=>{
+    const User=await User.aggregate([
+        {
+            $match:{
+                _id:new mongoose.Types.objectId(req.user._id)
+            }
+        },
+        {
+            $lookup:{
+                from:"videos",
+                localField:"watchHistory",
+                foreignFeild:"_id",
+                to:"watchHistory",
+                pipeline:[
+                    {
+                        $lookup:{    
+                            from:"users",
+                            localField:"owner",
+                            foreignFeild:"_id",
+                            to:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        fullname:1,
+                                        username:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{
+                                $first:"$owners"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+    )
+    return res
+    .status(200)
+    .json(
+        new apiResponse(200,User[0].watchHistory,"watch history fetched successfully")
+    )
+})
+
 export {
     registerUser,
     loginUser,
@@ -336,5 +386,6 @@ export {
     updateUsernameAndEmail,
     updateCoverImage,
     updateAvatar,
-    userProfile
+    userProfile,
+    getUserWatchHistory
 }
