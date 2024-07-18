@@ -1,5 +1,5 @@
 import mongoose,{Schema} from "mongoose";
-const subcriptionSChema = Schema({
+const subcriptionSChema = new Schema({
     channel:{
         type:Schema.Types.ObjectId,
         ref:"User"
