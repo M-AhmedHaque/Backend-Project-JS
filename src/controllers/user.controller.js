@@ -220,7 +220,9 @@ const updateAvatar = asyncHandle(async (req,res)=>{
     if(!avatarURL.url){
         return new apiError(400,"Problem in uploading on cloud")
     }
-    const user = await User.findByIdAndUpdate(req.user?._id,
+    const user = await User.findById(req.user?._id)
+    const oldUrl = user.avatar
+    const updatedUser = await User.findByIdAndUpdate(req.user?._id,
         {
             $set:{ 
                 avatar:avatarURL.url
@@ -228,10 +230,20 @@ const updateAvatar = asyncHandle(async (req,res)=>{
         },
         {save:true}
     ).select("-passwaord")
+
+    //delete old avatar from cloud
+    if (oldUrl) {
+        const publicId = oldUrl.split('/').pop().split('.')[0];
+        cloudinary.uploader.destroy(publicId, (error, result) => {
+            if (error) {
+                console.error("Failed to delete old avatar from Cloudinary:", error);
+            }
+        });
+    }
     return res
     .status(200)
     .json(
-        new apiResponse(200,user,"Avatar changed successfully")
+        new apiResponse(200,updatedUser,"Avatar changed successfully")
     )
 
 })
@@ -244,7 +256,9 @@ const updateCoverImage = asyncHandle(async (req,res)=>{
     if(!coverImageURL.url){
         return new apiError(400,"Problem in uploading cover image on cloud")
     }
-    const user = await User.findByIdAndUpdate(req.user?._id,
+    const user = await User.findById(req.user?._id)
+    const oldUrl = user.coverImage
+    const updatedUser = await User.findByIdAndUpdate(req.user?._id,
         {
             $set:{
                 coverImage:coverImageURL.url
@@ -252,10 +266,21 @@ const updateCoverImage = asyncHandle(async (req,res)=>{
         },
         {save:true}
     ).select("-passwaord")
+
+    //delete old coverImage from cloud
+    if (oldUrl) {
+        const publicId = oldUrl.split('/').pop().split('.')[0];
+        cloudinary.uploader.destroy(publicId, (error, result) => {
+            if (error) {
+                console.error("Failed to delete old cover image from Cloudinary:", error);
+            }
+        });
+    }
+
     return res
     .status(200)
     .json(
-        new apiResponse(200,user,"Cover image changed successfully")
+        new apiResponse(200,updatedUser,"Cover image changed successfully")
     )
     
 })
