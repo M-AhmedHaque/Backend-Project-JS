@@ -167,13 +167,16 @@ const refreshAccessToken = asyncHandle( async (req,res) =>{
 } )
 
 const changePassword = asyncHandle( async (req, res)=>{
-    const user = User.findById(req.user?._id)
+    const user = await User.findById(req.user?._id)
     const {currentPassword , newPassword } = req.body
+    console.log(currentPassword,newPassword)
     if(!currentPassword || !newPassword){
         throw new apiError(400,"Enter both fields")
     }
-    const isPasswordCorrect = user.isPasswordCorrect(currentPassword)
-    if(!isPasswordCorrect){
+    const passwordCorrect= await user.isPasswordCorrect(currentPassword)
+
+    //const passwordCorrect = await user.isPasswordCorrect(currentPassword)
+    if(!passwordCorrect){
         throw new apiError(400,"Wrong password")
     }
     user.password = newPassword
